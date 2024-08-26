@@ -7,17 +7,16 @@ import (
 	"github.com/milvus-io/milvus-sdk-go/v2/entity"
 	"log"
 	"math/rand"
-	"strconv"
 )
 
 const (
-	milvusAddr                                 = `192.168.230.71:19530`
-	dim                                        = 64
-	collectionName                             = "hello_iterator"
-	msgFmt                                     = "==== %s ====\n"
-	idCol, randomCol, addressCol, embeddingCol = "ID", "random", "address", "embeddings"
-	totalRows                                  = 3000
-	batchSize                                  = 1000
+	milvusAddr          = `192.168.230.71:19530`
+	dim                 = 768
+	collectionName      = "hello_iterator"
+	msgFmt              = "==== %s ====\n"
+	pkCol, embeddingCol = "pk", "embeddings"
+	totalRows           = 1000000
+	batchSize           = 1000
 )
 
 func main() {
@@ -46,9 +45,7 @@ func main() {
 	// create collection
 	log.Printf(msgFmt, fmt.Sprintf("create collection, `%s`", collectionName))
 	schema := entity.NewSchema().WithName(collectionName).WithDescription("hello_milvus is the simplest demo to introduce the APIs").
-		WithField(entity.NewField().WithName(idCol).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true).WithIsAutoID(false)).
-		WithField(entity.NewField().WithName(randomCol).WithDataType(entity.FieldTypeDouble)).
-		WithField(entity.NewField().WithName(addressCol).WithDataType(entity.FieldTypeVarChar).WithTypeParams(entity.TypeParamMaxLength, "50")).
+		WithField(entity.NewField().WithName(pkCol).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true).WithIsAutoID(false)).
 		WithField(entity.NewField().WithName(embeddingCol).WithDataType(entity.FieldTypeFloatVector).WithDim(dim))
 
 	if err := c.CreateCollection(ctx, schema, 1); err != nil {
@@ -69,19 +66,11 @@ func main() {
 		}
 		// insert data
 		idList := make([]int64, 0, batchSize)
-		randomList := make([]float64, 0, batchSize)
-		addressList := make([]string, 0, batchSize)
 		embeddingList := make([][]float32, 0, batchSize)
 
 		// generate data
 		for i := start; i < end; i++ {
 			idList = append(idList, int64(i))
-		}
-		for i := start; i < end; i++ {
-			randomList = append(randomList, rand.Float64())
-		}
-		for i := start; i < end; i++ {
-			addressList = append(addressList, "wuhan"+strconv.Itoa(i))
 		}
 		for i := start; i < end; i++ {
 			vec := make([]float32, 0, dim)
@@ -90,15 +79,11 @@ func main() {
 			}
 			embeddingList = append(embeddingList, vec)
 		}
-		idColData := entity.NewColumnInt64(idCol, idList)
-		randomColData := entity.NewColumnDouble(randomCol, randomList)
-		addressColData := entity.NewColumnVarChar(addressCol, addressList)
+		idColData := entity.NewColumnInt64(pkCol, idList)
 		embeddingColData := entity.NewColumnFloatVector(embeddingCol, dim, embeddingList)
 
 		if _, err := c.Insert(ctx, collectionName, "",
 			idColData,
-			randomColData,
-			addressColData,
 			embeddingColData); err != nil {
 			log.Fatalf("failed to insert random data into `hello_milvus, err: %v", err)
 		}

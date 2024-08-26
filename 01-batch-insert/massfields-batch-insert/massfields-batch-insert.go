@@ -11,15 +11,15 @@ import (
 )
 
 const (
-	milvusAddr     = `192.168.230.71:19530`
-	dim            = 512
+	milvusAddr     = `192.168.0.107:19530`
+	dim            = 3
 	collectionName = "hello_iterator"
 
 	msgFmt                                     = "==== %s ====\n"
 	idCol, randomCol, addressCol, embeddingCol = "ID", "random", "address", "embeddings"
 	boolCol, int8Col, int16Col, int32Col       = "boolCol", "int8Col", "int16Col", "int32Col"
-	totalRows                                  = 10005
-	batchSize                                  = 1000
+	totalRows                                  = 500
+	batchSize                                  = 100
 )
 
 func main() {
